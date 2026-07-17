@@ -19,7 +19,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     container:
-      image: openmandriva/rolling:latest
+      image: openmandriva/cooker:latest
       options: --privileged
 
     steps:
