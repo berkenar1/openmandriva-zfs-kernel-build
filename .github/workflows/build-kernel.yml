@@ -31,10 +31,11 @@ jobs:
           dnf clean all
           dnf install -y \
             git dkms rpm-build rpmdevtools createrepo_c dnf-plugins-core \
-            gcc clang make autogen autoconf automake libtool libuuid-devel libblkid-devel \
-            zlib-devel libtirpc-devel openssl-devel libudev-devel lz4-devel \
-            libzstd-devel elfutils-libelf-devel libaio-devel libattr-devel \
-            python3-devel libffi-devel wget pinentry ccache gnupg2
+            gcc clang make autogen autoconf automake libtool \
+            lib64uuid-devel lib64blkid-devel lib64z-devel lib64tirpc-devel \
+            lib64openssl-devel lib64udev-devel lib64lz4-devel lib64zstd-devel \
+            lib64elfutils-devel lib64aio-devel lib64attr-devel lib64ffi-devel \
+            python3-devel wget pinentry ccache gnupg2
 
       - name: Setup Compiler Cache (ccache)
         uses: actions/cache@v4
