@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 1. Install system dependencies
+# 1. Optimize DNF configuration for fast and reliable downloads
+mkdir -p /etc/dnf
+echo "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
+echo "fastestmirror=1" >> /etc/dnf/dnf.conf
+
+# 2. Clean and perform a full system upgrade first (updates glibc/dnf cleanly)
 dnf clean all
+dnf upgrade -y --refresh
+
+# 3. Install system dependencies
 dnf install -y \
   git dkms rpm-build rpmdevtools createrepo_c dnf-plugins-core \
   gcc clang make autogen autoconf automake libtool \
