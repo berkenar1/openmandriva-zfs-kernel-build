@@ -1,0 +1,127 @@
+name: Build and Sign Kernel & ZFS Repo
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: openmandriva/rolling:latest
+      options: --privileged
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: |
+          dnf clean all
+          dnf install -y \
+            git dkms rpm-build rpmdevtools createrepo_c dnf-plugins-core \
+            gcc clang make autogen autoconf automake libtool libuuid-devel libblkid-devel \
+            zlib-devel libtirpc-devel openssl-devel libudev-devel lz4-devel \
+            libzstd-devel elfutils-libelf-devel libaio-devel libattr-devel \
+            python3-devel libffi-devel wget pinentry ccache gnupg2
+
+      - name: Setup Compiler Cache (ccache)
+        uses: actions/cache@v4
+        with:
+          path: /root/.ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Configure ccache
+        run: |
+          ccache --max-size=5G
+          export PATH="/usr/lib64/ccache:$PATH"
+
+      - name: Setup RPM Build Directory
+        run: |
+          rpmdev-setuptree
+          cp -rf SPECS/* ~/rpmbuild/SPECS/
+          cp -rf SOURCES/* ~/rpmbuild/SOURCES/
+
+      - name: Download Kernel Source Tarball
+        run: |
+          cd ~/rpmbuild/SOURCES/
+          wget -q https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.0.tar.xz
+
+      - name: Install Kernel Spec Build Dependencies
+        run: |
+          dnf builddep -y ~/rpmbuild/SPECS/kernel.spec
+
+      - name: Import GPG Key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          # Configure macros file for rpm signing
+          echo "%_signature gpg" > ~/.rpmmacros
+          echo "%_gpg_name ${{ secrets.GPG_KEY_ID }}" >> ~/.rpmmacros
+          echo "%_gpg_path ~/.gnupg" >> ~/.rpmmacros
+
+      - name: Compile and Build Kernel RPMs (ccache optimized)
+        run: |
+          export PATH="/usr/lib64/ccache:$PATH"
+          rpmbuild -bb ~/rpmbuild/SPECS/kernel.spec
+
+      - name: Clone and Build ZFS Utilities and DKMS RPMs
+        run: |
+          export PATH="/usr/lib64/ccache:$PATH"
+          git clone --depth 1 https://github.com/openzfs/zfs.git ~/zfs-src
+          cd ~/zfs-src
+          ./autogen.sh
+          
+          DEVEL_RPM=$(find ~/rpmbuild/RPMS/ -name "kernel-desktop-devel-*.rpm" | head -n 1)
+          dnf install -y "$DEVEL_RPM"
+          KVER=$(rpm -qp --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}\n' "$DEVEL_RPM" | tr -d '\n')
+          
+          ./configure --with-linux="/usr/src/linux-$KVER" --disable-pyzfs
+          make rpm-utils rpm-dkms
+
+      - name: GPG Sign RPM Packages
+        run: |
+          # Sign all built RPM files
+          find ~/rpmbuild/RPMS/ ~/zfs-src/ -name "*.rpm" | xargs rpmsign --addsign
+
+      - name: Assemble Repository and Sign Metadata
+        run: |
+          mkdir -p repo/x86_64
+          # Move packages
+          find ~/rpmbuild/RPMS/ ~/zfs-src/ -name "*.rpm" -exec mv {} repo/x86_64/ \;
+          # Host the public key file in the repo root
+          cp repomd.xml.key repo/x86_64/ || true
+          
+          # Create RPM repo index
+          createrepo_c repo/x86_64/
+          
+          # Sign repomd.xml metadata file
+          gpg --batch --yes --detach-sign --armor repo/x86_64/repodata/repomd.xml
+
+      - name: Upload Repository Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'repo'
+
+  deploy-pages:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

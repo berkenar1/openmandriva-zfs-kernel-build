@@ -1,0 +1,8 @@
+# Ignore RPM build temporary and generated files
+BUILD/
+BUILDROOT/
+RPMS/
+SRPMS/
+
+# Ignore large source tarballs (which are downloaded on the fly in the CI/CD pipeline)
+SOURCES/linux-7.0.tar.xz

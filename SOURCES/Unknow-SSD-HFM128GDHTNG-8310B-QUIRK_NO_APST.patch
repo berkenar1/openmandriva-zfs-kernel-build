@@ -1,0 +1,21 @@
+diff -up linux-5.19-rc4/drivers/nvme/host/core.c.9~ linux-5.19-rc4/drivers/nvme/host/core.c
+--- linux-5.19-rc4/drivers/nvme/host/core.c.9~	2022-06-28 19:39:58.396745616 +0200
++++ linux-5.19-rc4/drivers/nvme/host/core.c	2022-06-28 20:00:06.421069676 +0200
+@@ -2560,7 +2560,16 @@ static const struct nvme_core_quirk_entr
+ 		.quirks = NVME_QUIRK_DELAY_BEFORE_CHK_RDY |
+ 			  NVME_QUIRK_NO_DEEPEST_PS |
+ 			  NVME_QUIRK_IGNORE_DEV_SUBNQN,
+-	}
++	},
++        {
++		/* https://forum.openmandriva.org/t/nvme-ssd-m2-not-seen-by-omlx-4-0/2407
++		 * Unknown SSD ... Maybe ADATA/Hynix (a similar mn from ADTA
++		 * but vid seems to be Hynix)
++		 */
++		.vid = 0x1c5c,
++		.mn = "HFM128GDHTNG-8310B",
++		.quirks = NVME_QUIRK_NO_APST,
++ 	}
+ };
+ 
+ /* match is null-terminated but idstr is space-padded. */
