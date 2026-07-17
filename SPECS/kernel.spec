@@ -46,14 +46,8 @@
 
 %define target_arch %(echo %{_arch} | sed -e 's/mips.*/mips/' -e 's/arm.*/arm/' -e 's/aarch64/arm64/' -e 's/x86_64/x86/' -e 's/i.86/x86/' -e 's/znver1/x86/' -e 's/riscv.*/riscv/' -e 's/ppc.*/powerpc/' -e 's/loongarch64/loongarch/')
 
-# (tpg) define here per arch which kernel flavours you would like to build
-# we don't currently have gcc on loongarch64, enable all kernels when we do
-%ifarch %{loongarch64}
-%define kernel_flavours desktop server
-%else
-%define kernel_flavours desktop server desktop-gcc server-gcc
-%endif
-# possible options are: desktop server desktop-gcc server-gcc
+# Only build the desktop kernel flavor for personal amd64 use
+%define kernel_flavours desktop
 
 # (tpg) package these kernel modules as subpackages
 %ifarch %{aarch64}
@@ -94,7 +88,7 @@
 
 %bcond_without build_source
 %bcond_without build_devel
-%bcond_without cross_headers
+%bcond_with cross_headers
 
 %bcond_with build_debug
 %bcond_without evdi
@@ -1793,8 +1787,8 @@ install -d %{temp_root}
 
 # Build the configs for every arch we care about
 # that way, we can be sure all *.config files have the right additions
-for a in arm arm64 i386 x86_64 znver1 powerpc riscv loongarch64; do
-	for t in desktop server; do
+for a in x86_64 znver1; do
+	for t in desktop; do
 		CreateConfig $a $t
 		export ARCH=$a
 		[ "$ARCH" = "znver1" ] && export ARCH=x86
