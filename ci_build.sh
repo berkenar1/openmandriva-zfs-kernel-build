@@ -21,6 +21,14 @@ dnf builddep -y ~/rpmbuild/SPECS/kernel.spec
 if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
     echo "Importing GPG Private Key..."
     echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+    
+    # Auto-detect Key ID if not explicitly provided
+    if [ -z "${GPG_KEY_ID:-}" ]; then
+        echo "GPG_KEY_ID not provided. Auto-detecting from GPG keyring..."
+        GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d':' -f5 | head -n 1)
+        echo "Auto-detected GPG Key ID: $GPG_KEY_ID"
+    fi
+
     echo "%_signature gpg" > ~/.rpmmacros
     echo "%_gpg_name $GPG_KEY_ID" >> ~/.rpmmacros
     echo "%_gpg_path ~/.gnupg" >> ~/.rpmmacros
