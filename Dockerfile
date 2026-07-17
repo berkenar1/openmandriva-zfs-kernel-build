@@ -15,4 +15,8 @@ RUN dnf install -y \
   lib64uuid-devel lib64blkid-devel lib64z-devel lib64tirpc-devel \
   lib64openssl-devel lib64udev-devel lib64lz4-devel lib64zstd-devel \
   lib64elfutils-devel lib64aio-devel lib64attr-devel lib64ffi-devel \
-  python3-devel wget pinentry ccache gnupg2
+  lib64atomic-devel python3-devel wget pinentry ccache gnupg2
+
+# 4. Workaround for GCC 16 packaging bug on OpenMandriva Cooker:
+# Create a dummy libatomic_asneeded.so linker script to satisfy compiler requirements
+RUN echo "INPUT ( AS_NEEDED ( /usr/lib64/libatomic.so.1 ) )" > /usr/lib64/libatomic_asneeded.so
