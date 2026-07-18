@@ -15,7 +15,10 @@ RUN dnf install -y \
   lib64uuid-devel lib64blkid-devel lib64z-devel lib64tirpc-devel \
   lib64openssl-devel lib64udev-devel lib64lz4-devel lib64zstd-devel \
   lib64elfutils-devel lib64aio-devel lib64attr-devel lib64ffi-devel \
-  lib64atomic-devel python3-devel wget pinentry ccache gnupg2
+  lib64atomic-devel python3-devel wget pinentry ccache gnupg2 \
+  bc bison flex gettext gnutar hostname lib64cap-devel lib64kmod-devel \
+  lib64numa-devel lib64pcap-devel lib64pci-devel locales-extra-charsets \
+  openssl pahole virtualbox-guest-kernel-module-sources virtualbox-kernel-module-sources
 
 # 4. Workaround for GCC 16 packaging bug on OpenMandriva Cooker:
 # Create a dummy libatomic_asneeded.so linker script to satisfy compiler requirements

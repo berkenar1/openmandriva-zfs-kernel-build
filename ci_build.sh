@@ -14,8 +14,7 @@ cp -rf SOURCES/* ~/rpmbuild/SOURCES/
 cd ~/rpmbuild/SOURCES/
 wget -q https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.0.tar.xz
 
-# 4. Install spec build deps (system is already upgraded, so this is fast and clean)
-dnf builddep -y ~/rpmbuild/SPECS/kernel.spec
+# 4. Spec build deps are pre-installed in the Docker image, skipping dnf builddep.
 
 # 5. GPG Setup
 if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
