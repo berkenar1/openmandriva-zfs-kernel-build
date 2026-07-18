@@ -11,7 +11,7 @@ RUN dnf clean all && dnf upgrade -y --refresh
 # 3. Install build dependencies
 RUN dnf install -y \
   git dkms rpm-build rpmdevtools createrepo_c dnf-plugins-core \
-  gcc clang make autogen autoconf automake libtool \
+  gcc clang make autogen autoconf automake libtool slibtool \
   lib64uuid-devel lib64blkid-devel lib64z-devel lib64tirpc-devel \
   lib64openssl-devel lib64udev-devel lib64lz4-devel lib64zstd-devel \
   lib64elfutils-devel lib64aio-devel lib64attr-devel lib64ffi-devel \
