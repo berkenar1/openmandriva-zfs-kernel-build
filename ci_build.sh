@@ -43,7 +43,8 @@ cd ~/zfs-src
 ./autogen.sh
 
 DEVEL_RPM=$(find ~/rpmbuild/RPMS/ -name "kernel-desktop-devel-*.rpm" | head -n 1)
-dnf install -y "$DEVEL_RPM"
+CORE_RPM=$(find ~/rpmbuild/RPMS/ -name "kernel-desktop-[0-9]*.rpm" | grep -v 'devel' | grep -v 'modules' | head -n 1)
+dnf install -y "$DEVEL_RPM" "$CORE_RPM"
 KVER=$(rpm -qp --queryformat '%{VERSION}-%{RELEASE}.%ARCH\n' "$DEVEL_RPM" | tr -d '\n' || true)
 if [ -z "$KVER" ]; then
     # Fallback to listing modules folder
